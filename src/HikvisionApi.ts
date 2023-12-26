@@ -1,39 +1,41 @@
-import https from 'https';
-import Axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
-import { AxiosDigest } from 'axios-digest';
-import xml2js, { Parser } from 'xml2js';
-import highland from 'highland';
-import { PlatformConfig } from 'homebridge';
+import https from "https";
+import Axios, { AxiosResponse, AxiosRequestConfig } from "axios";
+import AxiosDigest from "axios-digest";
+import xml2js, { Parser } from "xml2js";
+import highland from "highland";
+import { PlatformConfig } from "homebridge";
 
 export interface HikVisionNvrApiConfiguration extends PlatformConfig {
-  host: string
-  port: Number
-  secure: boolean
-  ignoreInsecureTls: boolean
-  username: string
-  password: string
-  debugFfmpeg: boolean
-  cf_id: string
-  cf_secrect: string
+  host: string;
+  port: Number;
+  secure: boolean;
+  ignoreInsecureTls: boolean;
+  username: string;
+  password: string;
+  debugFfmpeg: boolean;
+  cf_id: string;
+  cf_secrect: string;
 }
 
 export class HikvisionApi {
-  private _http?: AxiosDigest
-  private _parser?: Parser
+  private _http?: AxiosDigest;
+  private _parser?: Parser;
 
   constructor(config: HikVisionNvrApiConfiguration) {
     const _axios = Axios.create({
-      baseURL: `http${config.secure ? 's' : ''}://${config.host}:${config.port}`,
+      baseURL: `http${config.secure ? "s" : ""}://${config.host}:${
+        config.port
+      }`,
       httpsAgent: new https.Agent({
-        rejectUnauthorized: !config.ignoreInsecureTls
-      })
+        rejectUnauthorized: !config.ignoreInsecureTls,
+      }),
       /*headers:{
         'CF-Access-Client-Id' : config.secure,
         'CF-Access-Client-Secret': config.cf_secrect,
       }*/
     });
     this._http = new AxiosDigest(config.username, config.password, _axios);
-    this._parser = new Parser({ explicitArray: false })
+    this._parser = new Parser({ explicitArray: false });
   }
 
   /*
@@ -56,29 +58,37 @@ export class HikvisionApi {
   }
   */
   public async getSystemInfo() {
-    return this._getResponse('/ISAPI/System/deviceInfo');
+    return this._getResponse("/ISAPI/System/deviceInfo");
   }
 
   async getCameras() {
-    const channels = await this._getResponse('/ISAPI/System/Video/inputs/channels');
+    const channels = await this._getResponse(
+      "/ISAPI/System/Video/inputs/channels"
+    );
 
-    for (let i = 0; i < channels.VideoInputChannelList.VideoInputChannel.length; i++) {
+    for (
+      let i = 0;
+      i < channels.VideoInputChannelList.VideoInputChannel.length;
+      i++
+    ) {
       const channel = channels.VideoInputChannelList.VideoInputChannel[i];
-      if (channel.resDesc !== 'NO VIDEO') {
-        channel.capabilities = await this._getResponse(`/ISAPI/ContentMgmt/StreamingProxy/channels/${channel.id}01/capabilities`);
+      if (channel.resDesc !== "NO VIDEO") {
+        channel.capabilities = await this._getResponse(
+          `/ISAPI/ContentMgmt/StreamingProxy/channels/${channel.id}01/capabilities`
+        );
       }
-      channel.status = { online : channel.resDesc !== 'NO VIDEO' }
+      channel.status = { online: channel.resDesc !== "NO VIDEO" };
     }
 
-    return channels.VideoInputChannelList.VideoInputChannel.filter((camera: { status: { online: boolean; }; }) => camera.status.online);
+    return channels.VideoInputChannelList.VideoInputChannel.filter(
+      (camera: { status: { online: boolean } }) => camera.status.online
+    );
   }
 
   async startMonitoringEvents(callback: (value: any) => any) {
-
     const xmlParser = new xml2js.Parser({
       explicitArray: false,
     });
-
 
     /*
       EventNotificationAlert: {
@@ -99,23 +109,25 @@ export class HikvisionApi {
       }
       */
 
-
-    const url = `/ISAPI/Event/notification/alertStream`
+    const url = `/ISAPI/Event/notification/alertStream`;
 
     // TODO: what do we do if we lose our connection to the NVR? Don't we need to re-connect?
     this.get(url, {
-      responseType: 'stream',
-      headers: {}
-    }).then(response => {
+      responseType: "stream",
+      headers: {},
+    }).then((response) => {
       highland(response!.data)
-        .map((chunk: any) => chunk.toString('utf8'))
-        .filter(text => text.match(/<EventNotificationAlert/))
-        .map(xmlText => xmlParser.parseStringPromise(xmlText))
-        .each(promise => promise.then(callback));
+        .map((chunk: any) => chunk.toString("utf8"))
+        .filter((text) => text.match(/<EventNotificationAlert/))
+        .map((xmlText) => xmlParser.parseStringPromise(xmlText))
+        .each((promise) => promise.then(callback));
     });
   }
 
-  async get(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse | undefined> {
+  async get(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse | undefined> {
     return this._http?.get(url, config);
   }
 
