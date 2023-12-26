@@ -116,13 +116,17 @@ export class HikvisionApi {
       responseType: "stream",
       headers: {},
     }).then((response) => {
-      highland(response!.data)
-        .map((chunk: any) => chunk.toString("utf8"))
-        .filter((text) => text.match(/<EventNotificationAlert/))
-        .map((xmlText) =>
-          xmlParser.parseStringPromise(xmlText.toString("utf8"))
-        )
-        .each((promise) => promise.then(callback));
+      try {
+        highland(response!.data)
+          .map((chunk: any) => chunk.toString("utf8"))
+          .filter((text) => text.match(/<EventNotificationAlert/))
+          .map((xmlText) =>
+            xmlParser.parseStringPromise(xmlText.toString("utf8"))
+          )
+          .each((promise) => promise.then(callback));
+      } catch (e) {
+        console.error("Error in event stream", e);
+      }
     });
   }
 
@@ -135,9 +139,13 @@ export class HikvisionApi {
 
   private async _getResponse(path: string) {
     const response = await this._http?.get(path);
-    const responseJson = await this._parser?.parseStringPromise(
-      response?.data.toString("utf8")
-    );
-    return responseJson;
+    try {
+      const responseJson = await this._parser?.parseStringPromise(
+        response?.data.toString("utf8")
+      );
+      return responseJson;
+    } catch (e) {
+      console.error("Error parsing response", e);
+    }
   }
 }
