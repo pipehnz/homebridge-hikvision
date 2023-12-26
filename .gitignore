@@ -4,4 +4,3 @@ node_modules/
 .idea
 yarn-error.log
 **/config.json
-/dist
