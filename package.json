@@ -1,5 +1,5 @@
 {
-  "name": "@xarrar/homebridge-hikvision",
+  "name": "@velezhanski/homebridge-hikvision",
   "version": "1.0.3",
   "main": "dist/index.js",
   "license": "MIT",
