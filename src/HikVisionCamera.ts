@@ -89,19 +89,20 @@ export class HikVisionCamera {
     accessory.addService(motionSensor!);
 
     const channelId = accessory.context.channelId;
-    const cameraConfig = <CameraConfig> {
+    const cameraConfig = <CameraConfig>{
       name: accessory.displayName,
       videoConfig: {
-        source: `-rtsp_transport tcp -i rtsp://${accessory.context.username}:${accessory.context.password}@${accessory.context.host}/Streaming/Channels/${channelId}02`,
+        source: `-rtsp_transport tcp -i rtsp://${accessory.context.username}:${accessory.context.password}@${accessory.context.host}/Streaming/Channels/${channelId}01`,
         stillImageSource: `-i http${accessory.context.secure ? "s" : ""}://${
           accessory.context.username
         }:${accessory.context.password}@${
           accessory.context.host
         }/ISAPI/Streaming/channels/${channelId}01/picture?videoResolutionWidth=720`,
-        maxFPS: 30, // TODO: pull this from the camera to avoid ever upsampling
+        maxFPS: 15, // TODO: pull this from the camera to avoid ever upsampling
         maxBitrate: 16384, // TODO: pull this from the camera to avoid ever upsampling
-        maxWidth: 1920, // TODO: pull this from the camera to avoid ever upsampling
-        vcodec: "libx264",
+        maxWidth: 1280, // TODO: pull this from the camera to avoid ever upsampling
+        acodec: "copy",
+        vcodec: "copy",
         audio: accessory.context.hasAudio,
         debug: Boolean(accessory.context.debugFfmpeg),
       },
