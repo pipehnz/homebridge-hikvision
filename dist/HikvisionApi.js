@@ -122,11 +122,16 @@ class HikvisionApi {
                 responseType: "stream",
                 headers: {},
             }).then((response) => {
-                (0, highland_1.default)(response.data)
-                    .map((chunk) => chunk.toString("utf8"))
-                    .filter((text) => text.match(/<EventNotificationAlert/))
-                    .map((xmlText) => xmlParser.parseStringPromise(xmlText.toString("utf8")))
-                    .each((promise) => promise.then(callback));
+                try {
+                    (0, highland_1.default)(response.data)
+                        .map((chunk) => chunk.toString("utf8"))
+                        .filter((text) => text.match(/<EventNotificationAlert/))
+                        .map((xmlText) => xmlParser.parseStringPromise(xmlText.toString("utf8")))
+                        .each((promise) => promise.then(callback));
+                }
+                catch (e) {
+                    console.error("Error in event stream", e);
+                }
             });
         });
     }
@@ -140,8 +145,13 @@ class HikvisionApi {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const response = yield ((_a = this._http) === null || _a === void 0 ? void 0 : _a.get(path));
-            const responseJson = yield ((_b = this._parser) === null || _b === void 0 ? void 0 : _b.parseStringPromise(response === null || response === void 0 ? void 0 : response.data.toString("utf8")));
-            return responseJson;
+            try {
+                const responseJson = yield ((_b = this._parser) === null || _b === void 0 ? void 0 : _b.parseStringPromise(response === null || response === void 0 ? void 0 : response.data.toString("utf8")));
+                return responseJson;
+            }
+            catch (e) {
+                console.error("Error parsing response", e);
+            }
         });
     }
 }

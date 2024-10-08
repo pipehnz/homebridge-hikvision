@@ -13,13 +13,15 @@ export class HikVisionNVR {
   cameras: HikVisionCamera[];
 
   constructor(logger: any, config: PlatformConfig, api: API) {
-    this.hikVisionApi = new HikvisionApi(config as HikVisionNvrApiConfiguration);
+    this.hikVisionApi = new HikvisionApi(
+      config as HikVisionNvrApiConfiguration
+    );
     this.homebridgeApi = api;
     this.log = logger;
     this.config = config as HikVisionNvrApiConfiguration;
     this.cameras = [];
 
-    this.log("Initialising accessories for HikVision...");
+    this.log("Initializing accessories for HikVision...");
 
     this.homebridgeApi.on(
       "didFinishLaunching",
@@ -29,32 +31,25 @@ export class HikVisionNVR {
 
   async loadAccessories() {
     const systemInformation = await this.hikVisionApi.getSystemInfo();
-    this.log.info("Connected to NVR system: %O", systemInformation)
+    this.log.info("Connected to NVR system: %O", systemInformation);
 
     this.log.info("Loading cameras...");
     const cameras = await this.hikVisionApi.getCameras();
     this.log.debug("Found cameras: %s", JSON.stringify(cameras, null, 4));
 
-    cameras.map((channel: {
-      id: string;
-      name: string;
-      capabilities: any;
-    }) => {
-
+    cameras.map((channel: { id: string; name: string; capabilities: any }) => {
       const cameraConfig = {
         accessory: "camera",
         name: channel.name,
         channelId: channel.id,
-        hasAudio: false,
+        hasAudio: true,
       };
 
       const cameraUUID = this.homebridgeApi.hap.uuid.generate(
         HIKVISION_PLUGIN_NAME + cameraConfig.name
       );
-      const accessory: PlatformAccessory = new this.homebridgeApi.platformAccessory(
-        cameraConfig.name,
-        cameraUUID
-      );
+      const accessory: PlatformAccessory =
+        new this.homebridgeApi.platformAccessory(cameraConfig.name, cameraUUID);
       accessory.context = cameraConfig;
 
       // Only add new cameras that are not cached
@@ -92,7 +87,10 @@ export class HikVisionNVR {
     const cameraAccessoryInfo = camera.getService(
       this.homebridgeApi.hap.Service.AccessoryInformation
     );
-    cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.Manufacturer, 'HikVision');
+    cameraAccessoryInfo!.setCharacteristic(
+      this.homebridgeApi.hap.Characteristic.Manufacturer,
+      "HikVision"
+    );
     // cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.Model, systemInformation.DeviceInfo.model);
     // cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.SerialNumber, systemInformation.DeviceInfo.serialNumber);
     // cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.FirmwareRevision, systemInformation.DeviceInfo.firmwareVersion);
@@ -139,7 +137,10 @@ export class HikVisionNVR {
           );
 
           setTimeout(() => {
-            this.log.info("Disabling motion detection on camera", camera.displayName);
+            this.log.info(
+              "Disabling motion detection on camera",
+              camera.displayName
+            );
             camera.motionDetected = !motionDetected;
             camera
               .getService(this.homebridgeApi.hap.Service.MotionSensor)

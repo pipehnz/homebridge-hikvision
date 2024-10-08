@@ -20,7 +20,7 @@ class HikVisionNVR {
         this.log = logger;
         this.config = config;
         this.cameras = [];
-        this.log("Initialising accessories for HikVision...");
+        this.log("Initializing accessories for HikVision...");
         this.homebridgeApi.on("didFinishLaunching", this.loadAccessories.bind(this));
     }
     loadAccessories() {
@@ -35,7 +35,7 @@ class HikVisionNVR {
                     accessory: "camera",
                     name: channel.name,
                     channelId: channel.id,
-                    hasAudio: false,
+                    hasAudio: true,
                 };
                 const cameraUUID = this.homebridgeApi.hap.uuid.generate(_1.HIKVISION_PLUGIN_NAME + cameraConfig.name);
                 const accessory = new this.homebridgeApi.platformAccessory(cameraConfig.name, cameraUUID);
@@ -64,7 +64,7 @@ class HikVisionNVR {
             accessory.context = Object.assign(accessory.context, this.config);
             const camera = new HikVisionCamera_1.HikVisionCamera(this.log, this.homebridgeApi, accessory);
             const cameraAccessoryInfo = camera.getService(this.homebridgeApi.hap.Service.AccessoryInformation);
-            cameraAccessoryInfo.setCharacteristic(this.homebridgeApi.hap.Characteristic.Manufacturer, 'HikVision');
+            cameraAccessoryInfo.setCharacteristic(this.homebridgeApi.hap.Characteristic.Manufacturer, "HikVision");
             // cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.Model, systemInformation.DeviceInfo.model);
             // cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.SerialNumber, systemInformation.DeviceInfo.serialNumber);
             // cameraAccessoryInfo!.setCharacteristic(this.homebridgeApi.hap.Characteristic.FirmwareRevision, systemInformation.DeviceInfo.firmwareVersion);
